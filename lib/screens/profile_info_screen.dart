@@ -66,6 +66,34 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen> {
     setState(() => _saving = true);
 
     try {
+      final user = AuthService().currentUser;
+      final currentEmail = user?.email ?? '';
+      final newEmail = _emailController.text.trim();
+      
+      // Verificar si el correo cambió
+      if (newEmail != currentEmail) {
+        // Mostrar diálogo de confirmación antes de cambiar el correo
+        final confirm = await _showEmailChangeConfirmation(currentEmail, newEmail);
+        if (!confirm) {
+          setState(() => _saving = false);
+          return;
+        }
+        
+        // Actualizar el correo (enviará email de verificación)
+        await AuthService().updateEmail(newEmail);
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Se ha enviado un correo de verificación a $newEmail\nRevisa tu bandeja de entrada y confirma el cambio'),
+              backgroundColor: FynceeColors.primary,
+              duration: const Duration(seconds: 6),
+            ),
+          );
+        }
+      }
+      
+      // Actualizar el resto del perfil
       await SupabaseService().updateUserProfile(
         fullName: _nameController.text.trim(),
         currency: _selectedCurrency,
@@ -98,6 +126,148 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen> {
         setState(() => _saving = false);
       }
     }
+  }
+
+  Future<bool> _showEmailChangeConfirmation(String currentEmail, String newEmail) async {
+    return await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: FynceeColors.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            Icon(Icons.warning_rounded, color: FynceeColors.warning),
+            const SizedBox(width: 12),
+            const Text(
+              'Cambiar correo',
+              style: TextStyle(
+                color: FynceeColors.textPrimary,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '¿Estás seguro de cambiar tu correo?',
+              style: TextStyle(
+                color: FynceeColors.textPrimary,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: FynceeColors.surfaceLight,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.email_outlined, size: 16, color: FynceeColors.textSecondary),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Correo actual:',
+                        style: TextStyle(
+                          color: FynceeColors.textSecondary,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    currentEmail,
+                    style: const TextStyle(
+                      color: FynceeColors.textPrimary,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Icon(Icons.arrow_forward, size: 16, color: FynceeColors.primary),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Nuevo correo:',
+                        style: TextStyle(
+                          color: FynceeColors.textSecondary,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    newEmail,
+                    style: const TextStyle(
+                      color: FynceeColors.primary,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: FynceeColors.warning.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: FynceeColors.warning.withValues(alpha: 0.3),
+                ),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.info_outline, size: 20, color: FynceeColors.warning),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Se enviará un correo de verificación a tu nueva dirección. Deberás confirmarlo para completar el cambio.',
+                      style: TextStyle(
+                        color: FynceeColors.textPrimary.withValues(alpha: 0.9),
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(
+              'Cancelar',
+              style: TextStyle(color: FynceeColors.textSecondary),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: FynceeColors.primary,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text('Confirmar cambio'),
+          ),
+        ],
+      ),
+    ) ?? false;
   }
 
   @override
@@ -148,8 +318,17 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen> {
                           controller: _emailController,
                           label: 'Correo electrónico',
                           icon: Icons.email_rounded,
-                          enabled: false,
-                          helperText: 'El correo no se puede modificar',
+                          keyboardType: TextInputType.emailAddress,
+                          helperText: 'Se enviará un correo de verificación si lo cambias',
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return 'Por favor ingresa tu correo';
+                            }
+                            if (!value.contains('@') || !value.contains('.')) {
+                              return 'Ingresa un correo válido';
+                            }
+                            return null;
+                          },
                         ),
                         const SizedBox(height: 16),
                         _buildTextField(

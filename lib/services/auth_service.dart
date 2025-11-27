@@ -160,6 +160,25 @@ class AuthService {
     }
   }
 
+  /// Actualizar email (requiere estar autenticado y verificación)
+  Future<void> updateEmail(String newEmail) async {
+    if (!isAuthenticated) throw 'Usuario no autenticado';
+    
+    try {
+      await _client.auth.updateUser(
+        UserAttributes(email: newEmail),
+      );
+      print('✅ Email de verificación enviado a $newEmail');
+      print('ℹ️  Por favor verifica tu nuevo correo para completar el cambio');
+    } catch (e) {
+      print('❌ Error al actualizar email: $e');
+      if (e.toString().contains('Email rate limit exceeded')) {
+        throw 'Has alcanzado el límite de intentos. Por favor espera unos minutos.';
+      }
+      rethrow;
+    }
+  }
+
   // ==================== VERIFICACIÓN DE EMAIL ====================
 
   /// Reenviar email de verificación
