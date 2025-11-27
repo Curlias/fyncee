@@ -49,16 +49,24 @@ class SupabaseService {
 
   /// Crear una nueva transacción en Supabase (requiere autenticación)
   Future<Map<String, dynamic>?> createTransaction(app.Transaction transaction) async {
-    // Siempre guardar en Hive primero (para offline)
-    await DatabaseService().saveTransaction(transaction);
-    print('💾 Transacción guardada en Hive (local)');
-    
     if (!_isAuthenticated) {
-      print('⚠️ Usuario no autenticado - guardada solo en local');
-      return null;
+      // Si no está autenticado, generar un ID local pequeño
+      final localId = DateTime.now().millisecondsSinceEpoch % 0xFFFFFFFF;
+      final localTransaction = app.Transaction(
+        id: localId,
+        type: transaction.type,
+        amount: transaction.amount,
+        categoryId: transaction.categoryId,
+        note: transaction.note,
+        date: transaction.date,
+      );
+      await DatabaseService().saveTransaction(localTransaction);
+      print('💾 Transacción guardada en Hive (local) con ID: $localId');
+      return {'id': localId};
     }
 
     try {
+      // Primero crear en Supabase para obtener el ID real
       final response = await client.from('transactions').insert({
         'user_id': _userId,
         'type': transaction.type,
@@ -68,8 +76,8 @@ class SupabaseService {
         'date': transaction.date.toIso8601String(),
       }).select().single();
       
-      // Actualizar en Hive con el ID de Supabase
-      final updatedTransaction = app.Transaction(
+      // Ahora guardar en Hive con el ID correcto de Supabase
+      final savedTransaction = app.Transaction(
         id: response['id'] as int,
         type: transaction.type,
         amount: transaction.amount,
@@ -77,13 +85,24 @@ class SupabaseService {
         note: transaction.note,
         date: transaction.date,
       );
-      await DatabaseService().saveTransaction(updatedTransaction);
+      await DatabaseService().saveTransaction(savedTransaction);
       
-      print('✅ Transacción sincronizada con Supabase ID: ${response['id']}');
+      print('✅ Transacción guardada - Supabase ID: ${response['id']}');
       return response;
     } catch (e) {
       print('❌ Error sincronizando con Supabase: $e');
-      print('💾 Transacción disponible offline en Hive');
+      // Si falla Supabase, guardar solo en Hive con ID local
+      final localId = DateTime.now().millisecondsSinceEpoch % 0xFFFFFFFF;
+      final localTransaction = app.Transaction(
+        id: localId,
+        type: transaction.type,
+        amount: transaction.amount,
+        categoryId: transaction.categoryId,
+        note: transaction.note,
+        date: transaction.date,
+      );
+      await DatabaseService().saveTransaction(localTransaction);
+      print('💾 Transacción guardada offline en Hive con ID: $localId');
       rethrow;
     }
   }
