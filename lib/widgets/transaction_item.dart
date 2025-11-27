@@ -43,21 +43,25 @@ class _TransactionItemState extends State<TransactionItem> {
           'color_value': 0xFF6B7280,
         },
       );
-      setState(() {
-        _category = category;
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _category = category;
+          _isLoading = false;
+        });
+      }
     } catch (e) {
       print('Error cargando categoría: $e');
-      setState(() {
-        _category = {
-          'id': widget.transaction.categoryId,
-          'name': 'Sin categoría',
-          'icon': 'category',
-          'color_value': 0xFF6B7280,
-        };
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _category = {
+            'id': widget.transaction.categoryId,
+            'name': 'Sin categoría',
+            'icon': 'category',
+            'color_value': 0xFF6B7280,
+          };
+          _isLoading = false;
+        });
+      }
     }
   }
 

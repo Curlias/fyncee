@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/auth_service.dart';
 import '../services/database_service.dart';
 import '../theme.dart';
@@ -23,6 +24,31 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false;
   bool _obscurePassword = true;
   String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _setupAuthListener();
+  }
+
+  // Escuchar el evento de autenticación exitosa (OAuth)
+  void _setupAuthListener() {
+    Supabase.instance.client.auth.onAuthStateChange.listen((data) {
+      final event = data.event;
+      
+      if (event == AuthChangeEvent.signedIn && mounted) {
+        // Usuario autenticado exitosamente via OAuth (Google)
+        print('📱 LoginScreen: Navegando a /home después de OAuth');
+        
+        // Navegar a home y limpiar el stack
+        Future.delayed(Duration.zero, () {
+          if (mounted) {
+            Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
+          }
+        });
+      }
+    });
+  }
 
   @override
   void dispose() {
