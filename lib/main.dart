@@ -175,10 +175,28 @@ class _AuthCheckerState extends State<AuthChecker> {
   void _handleDeepLink(Uri uri) {
     print('Deep link recibido: $uri');
     
-    // Supabase maneja automáticamente los tokens de verificación
-    // Solo necesitamos refrescar la sesión
-    if (uri.fragment.isNotEmpty) {
-      // El fragment contiene los parámetros de autenticación
+    // Parsear el fragment para extraer el mensaje
+    final fragment = uri.fragment;
+    final queryParams = Uri.splitQueryString(fragment);
+    final message = queryParams['message'];
+    
+    // Verificar si es un mensaje de confirmación de cambio de email
+    if (message != null && message.contains('Confirmation link accepted')) {
+      print('✅ Primer paso de cambio de email completado');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('✅ Confirmación recibida. Revisa el correo nuevo para completar el cambio.'),
+            backgroundColor: Colors.orange,
+            duration: Duration(seconds: 5),
+          ),
+        );
+      }
+      return;
+    }
+    
+    // Intentar procesar como sesión de autenticación normal
+    if (fragment.isNotEmpty && (fragment.contains('access_token') || fragment.contains('refresh_token'))) {
       Supabase.instance.client.auth.getSessionFromUrl(uri).then((response) {
         print('✅ Sesión actualizada desde deep link');
         
@@ -194,14 +212,6 @@ class _AuthCheckerState extends State<AuthChecker> {
         }
       }).catchError((error) {
         print('Error procesando deep link: $error');
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Error: $error'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
       });
     }
   }
