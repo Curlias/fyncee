@@ -345,8 +345,14 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
     final selectedCat = _categories.firstWhere((c) => c['id'] == _selectedCategoryId);
     print('  Categoría encontrada: ${selectedCat['name']} (ID: ${selectedCat['id']})');
 
+    // Generar un ID temporal pequeño que Hive pueda manejar (solo para transacciones nuevas)
+    // Supabase generará el ID real
+    final tempId = isEditing 
+        ? widget.transactionToEdit!.id 
+        : DateTime.now().millisecondsSinceEpoch % 0xFFFFFFFF;
+
     final transaction = Transaction(
-      id: isEditing ? widget.transactionToEdit!.id : DateTime.now().millisecondsSinceEpoch,
+      id: tempId,
       type: _selectedType.toLowerCase(),
       amount: amount,
       categoryId: _selectedCategoryId!,
