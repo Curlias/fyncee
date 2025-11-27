@@ -225,12 +225,19 @@ class _AuthCheckerState extends State<AuthChecker> {
   void _setupAuthListener() {
     Supabase.instance.client.auth.onAuthStateChange.listen((data) {
       final event = data.event;
+      print('🔔 Auth event: $event');
+      
       if (event == AuthChangeEvent.signedIn) {
         // Usuario inició sesión exitosamente (incluyendo con Google)
         print('✅ Usuario autenticado: ${data.session?.user.email}');
-        if (mounted) {
-          Navigator.of(context).pushReplacementNamed('/home');
-        }
+        
+        // Esperar a que el widget esté montado y listo
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            print('📱 Navegando a /home');
+            Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
+          }
+        });
       }
     });
   }
