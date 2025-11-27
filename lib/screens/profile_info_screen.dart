@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../theme.dart';
 import '../services/supabase_service.dart';
 import '../services/auth_service.dart';
@@ -25,6 +26,30 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen> {
   void initState() {
     super.initState();
     _loadProfile();
+    _setupAuthListener();
+  }
+
+  // Escuchar cambios en la autenticación (incluyendo cambio de email)
+  void _setupAuthListener() {
+    Supabase.instance.client.auth.onAuthStateChange.listen((data) {
+      final event = data.event;
+      if (event == AuthChangeEvent.userUpdated && mounted) {
+        // Recargar email cuando el usuario se actualice
+        final newEmail = data.session?.user.email;
+        if (newEmail != null && newEmail != _emailController.text) {
+          setState(() {
+            _emailController.text = newEmail;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('✅ Email actualizado a: $newEmail'),
+              backgroundColor: Colors.green,
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        }
+      }
+    });
   }
 
   @override

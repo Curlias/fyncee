@@ -200,6 +200,11 @@ class _AuthCheckerState extends State<AuthChecker> {
       Supabase.instance.client.auth.getSessionFromUrl(uri).then((response) {
         print('✅ Sesión actualizada desde deep link');
         
+        // Refrescar la sesión para obtener los datos más recientes
+        Supabase.instance.client.auth.refreshSession().then((_) {
+          print('✅ Sesión refrescada con nuevos datos');
+        });
+        
         // Mostrar mensaje de éxito
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
