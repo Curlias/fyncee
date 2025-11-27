@@ -2457,6 +2457,13 @@ class _HomePageState extends State<HomePage> {
           ),
           _buildDivider(),
           _buildMenuItem(
+            icon: Icons.account_balance_rounded,
+            title: 'Notificaciones bancarias',
+            subtitle: 'Registrar transacciones automáticamente',
+            onTap: _showBankNotificationsDialog,
+          ),
+          _buildDivider(),
+          _buildMenuItem(
             icon: Icons.brightness_6_rounded,
             title: 'Tema',
             subtitle: 'Claro u oscuro',
@@ -3429,6 +3436,223 @@ class _HomePageState extends State<HomePage> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showBankNotificationsDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: surfaceColor,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            Icon(Icons.account_balance_rounded, color: FynceeColors.primary),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Notificaciones bancarias',
+                style: TextStyle(
+                  color: textPrimaryColor,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 18,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Registra transacciones automáticamente desde notificaciones de tu banco.',
+                style: TextStyle(
+                  color: textSecondaryColor,
+                  fontSize: 14,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 20),
+              
+              // Instrucciones
+              _buildInfoBox(
+                icon: Icons.phone_android_rounded,
+                title: 'Cómo funciona',
+                description: 'Cuando recibas una notificación de tu banco sobre una transacción, '
+                    'Fyncee puede leerla y crear automáticamente el registro en tu historial.',
+              ),
+              const SizedBox(height: 12),
+              
+              _buildInfoBox(
+                icon: Icons.security_rounded,
+                title: 'Privacidad',
+                description: 'Fyncee solo lee notificaciones de bancos que tú autorices. '
+                    'Tus datos bancarios nunca se comparten.',
+                color: FynceeColors.success,
+              ),
+              const SizedBox(height: 12),
+              
+              _buildInfoBox(
+                icon: Icons.settings_rounded,
+                title: 'Configuración',
+                description: 'Ve a Ajustes de Android > Notificaciones > Acceso a notificaciones '
+                    'y activa Fyncee.',
+                color: Colors.orange,
+              ),
+              const SizedBox(height: 20),
+              
+              // Nota sobre disponibilidad y fase
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.purple.withValues(alpha: 0.1),
+                      Colors.blue.withValues(alpha: 0.1),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Colors.purple.withValues(alpha: 0.3),
+                    width: 1.5,
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.purple,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            'ALPHA',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            'Función en desarrollo',
+                            style: TextStyle(
+                              color: Colors.purple,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(
+                          Icons.rocket_launch_rounded,
+                          color: Colors.purple.withValues(alpha: 0.7),
+                          size: 18,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Esta característica estará disponible próximamente en Android. '
+                            'Estamos trabajando para ofrecerte la mejor experiencia.',
+                            style: TextStyle(
+                              color: textSecondaryColor.withValues(alpha: 0.9),
+                              fontSize: 12,
+                              height: 1.4,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'Entendido',
+              style: TextStyle(
+                color: FynceeColors.primary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoBox({
+    required IconData icon,
+    required String title,
+    required String description,
+    Color? color,
+  }) {
+    final boxColor = color ?? FynceeColors.primary;
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: boxColor.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: boxColor.withValues(alpha: 0.2),
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            icon,
+            color: boxColor,
+            size: 22,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    color: textPrimaryColor,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  description,
+                  style: TextStyle(
+                    color: textSecondaryColor.withValues(alpha: 0.8),
+                    fontSize: 12,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
