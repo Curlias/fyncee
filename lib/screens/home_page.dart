@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:share_plus/share_plus.dart';
 import 'dart:io';
 
 import '../models/transaction.dart';
@@ -412,14 +413,27 @@ class _HomePageState extends State<HomePage> {
             _buildDrawerItem(
               icon: Icons.share_rounded,
               title: 'Compartir App',
-              onTap: () {
+              onTap: () async {
                 Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Función de compartir próximamente'),
-                    backgroundColor: FynceeColors.primary,
-                  ),
-                );
+                try {
+                  await Share.share(
+                    '¡Descubre Fyncee! 💰\n\n'
+                    'La mejor app para gestionar tus finanzas personales.\n'
+                    'Controla tus gastos, crea metas de ahorro y mucho más.\n\n'
+                    '📱 Descarga Fyncee:\n'
+                    'https://fyncee.app',
+                    subject: 'Te recomiendo Fyncee - App de Finanzas',
+                  );
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Error al compartir: $e'),
+                        backgroundColor: FynceeColors.error,
+                      ),
+                    );
+                  }
+                }
               },
             ),
             _buildDrawerItem(
