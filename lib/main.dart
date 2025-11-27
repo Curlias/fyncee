@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:app_links/app_links.dart';
 
 import 'screens/home_page.dart';
 import 'screens/login_screen.dart';
@@ -136,12 +137,73 @@ class AuthChecker extends StatefulWidget {
 
 class _AuthCheckerState extends State<AuthChecker> {
   bool _biometricChecked = false;
+  late AppLinks _appLinks;
 
   @override
   void initState() {
     super.initState();
     _setupAuthListener();
+    _setupDeepLinkListener();
     _checkAuth();
+  }
+
+  // Configurar listener para deep links (verificación de email, etc.)
+  void _setupDeepLinkListener() async {
+    _appLinks = AppLinks();
+    
+    // Manejar deep link inicial (si la app se abrió con un link)
+    try {
+      final initialLink = await _appLinks.getInitialLink();
+      if (initialLink != null) {
+        _handleDeepLink(initialLink);
+      }
+    } catch (e) {
+      print('Error getting initial link: $e');
+    }
+    
+    // Escuchar deep links mientras la app está abierta
+    _appLinks.uriLinkStream.listen((Uri? uri) {
+      if (uri != null) {
+        _handleDeepLink(uri);
+      }
+    }, onError: (err) {
+      print('Error handling deep link: $err');
+    });
+  }
+
+  // Manejar el deep link recibido
+  void _handleDeepLink(Uri uri) {
+    print('Deep link recibido: $uri');
+    
+    // Supabase maneja automáticamente los tokens de verificación
+    // Solo necesitamos refrescar la sesión
+    if (uri.fragment.isNotEmpty) {
+      // El fragment contiene los parámetros de autenticación
+      Supabase.instance.client.auth.getSessionFromUrl(uri).then((response) {
+        print('✅ Sesión actualizada desde deep link');
+        
+        // Mostrar mensaje de éxito
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('✅ Email verificado correctamente'),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
+      }).catchError((error) {
+        print('Error procesando deep link: $error');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error: $error'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      });
+    }
   }
 
   // Escuchar cambios en la autenticación (incluyendo OAuth callbacks)

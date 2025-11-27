@@ -44,6 +44,7 @@ dependencies:
   
   # Supabase (Cloud Database)
   supabase_flutter: ^2.5.0
+  app_links: ^6.3.2
   
   # Notificaciones
   flutter_local_notifications: ^17.2.3
