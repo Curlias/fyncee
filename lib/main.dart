@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -104,6 +105,16 @@ class _FynceeAppState extends State<FynceeApp> {
       title: 'Fyncee',
       debugShowCheckedModeBanner: false,
       theme: _isDarkMode ? FynceeTheme.darkTheme : FynceeTheme.lightTheme,
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('es', 'MX'), // Español
+        Locale('en', 'US'), // Inglés (fallback)
+      ],
+      locale: const Locale('es', 'MX'),
       home: const AuthChecker(),
       routes: {
         '/login': (context) => const LoginScreen(),

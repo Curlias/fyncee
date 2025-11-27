@@ -1457,6 +1457,7 @@ class _HomePageState extends State<HomePage> {
       initialDate: now,
       firstDate: DateTime(2020),
       lastDate: now,
+      helpText: 'Seleccionar fecha de inicio',
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
@@ -1474,11 +1475,16 @@ class _HomePageState extends State<HomePage> {
     
     if (startDate == null) return;
     
+    // Calcular initialDate para el selector de fecha final
+    final endInitialDate = startDate.add(const Duration(days: 1));
+    final endDateInitial = endInitialDate.isAfter(now) ? now : endInitialDate;
+    
     final endDate = await showDatePicker(
       context: context,
-      initialDate: startDate.add(const Duration(days: 1)),
+      initialDate: endDateInitial,
       firstDate: startDate,
       lastDate: now,
+      helpText: 'Seleccionar fecha de fin',
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
